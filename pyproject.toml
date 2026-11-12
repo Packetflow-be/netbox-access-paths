@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netbox-access-paths"
+dynamic = ["version"]
+description = "Document how your team reaches every customer system: access routes, paths, hops, holders and reviews in NetBox"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Packetflow" }]
+requires-python = ">=3.12"
+keywords = ["netbox", "netbox-plugin", "msp", "remote-access", "jump-host", "nis2", "access-review"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: System :: Networking",
+]
+
+[project.urls]
+Homepage = "https://github.com/Packetflow-be/netbox-access-paths"
+Documentation = "https://github.com/Packetflow-be/netbox-access-paths#readme"
+Issues = "https://github.com/Packetflow-be/netbox-access-paths/issues"
+Changelog = "https://github.com/Packetflow-be/netbox-access-paths/blob/main/CHANGELOG.md"
+
+[tool.setuptools.dynamic]
+version = { attr = "netbox_access_paths.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["netbox_access_paths*"]
+
+[tool.setuptools.package-data]
+netbox_access_paths = ["templates/**/*.html", "tests/*.json"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"netbox_access_paths/migrations/*" = ["E501", "I001"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["netbox_access_paths"]
+section-order = ["future", "standard-library", "third-party", "netbox", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+netbox = ["core", "dcim", "extras", "ipam", "netbox", "tenancy", "users", "utilities", "virtualization", "vpn"]

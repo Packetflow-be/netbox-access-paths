@@ -1,0 +1,14 @@
+{% extends 'generic/object_children.html' %}
+{% load i18n %}
+
+{% block table_controls %}
+  <div class="alert alert-info d-print-none">
+    {% blocktrans with name=object.name %}Every access path {{ name }} may use: as a holder, or as a member of a holder group or one of its sub-groups. When someone leaves, this is the list to close.{% endblocktrans %}
+  </div>
+  <div class="d-flex flex-wrap gap-2 mb-3 d-print-none">
+    <a href="{% url 'plugins:netbox_access_paths:export' %}?holder_id={{ object.pk }}&format=csv" class="btn btn-sm btn-outline-primary">
+      <i class="mdi mdi-download"></i> {% trans "Export (CSV)" %}
+    </a>
+  </div>
+  {{ block.super }}
+{% endblock table_controls %}
