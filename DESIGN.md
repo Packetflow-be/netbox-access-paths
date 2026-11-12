@@ -1,15 +1,13 @@
 # netbox-access-paths: design sketch (2026-11-12)
 
-Hand-off for the session that builds v0.1. Decisions taken with Louis on 2026-11-12:
+Why it looks the way it does:
 
 - **Separate plugin**, not part of netbox-iec62443 (IT MSPs won't install Purdue/SL
-  models to document jump hosts) and **not** a contribution to netbox-data-flows.
-- **Copy the Flow/FlowHop pattern from netbox-iec62443, don't depend on it.** Source:
-  `~/packetflow/netbox-iec62443/netbox_iec62443/models.py` (`Flow` ~L283, `FlowHop` ~L478):
-  ordered hops with an exactly-one-of check; verdict with decided_by/decided_on auto-dating,
-  review_by, expires, `is_expired`/`is_review_due` properties.
-- Goal is giving back to the community and using it at Packetflow (maybe e-BO, if they run
-  NetBox: unknown). Keep it small: **three models**, maintainable by one person.
+  models to document jump hosts) and not an extension of netbox-data-flows.
+- **Same pattern as netbox-iec62443's Flow/FlowHop, no dependency on it**: ordered hops with an
+  exactly-one-of check; approval with approved_by/approved_on auto-dating, review_by, expires,
+  `is_expired`/`is_review_due` properties.
+- A community plugin that Packetflow uses itself. Kept small: **three models**, maintainable by one person.
 
 ## Packaging
 
@@ -102,25 +100,10 @@ holder, hop device/VM, review_due, expired, lacks_mfa), REST API, GraphQL, searc
 - Discovering paths automatically.
 - Diagram libraries; the badge chain is enough.
 
-## Open questions for the implementing session
+## Open questions, and how v0.1 settled them (2026-11-12)
 
-- `holders` as explicit M2M vs NetBox contact assignments (`ContactsMixin`) with a role.
-  Leaning M2M because assignments go to contacts, not contact groups, and the Contact
-  tab query stays simple. Check what NetBox 4.7 offers before deciding.
-- `ipam.Service` parent is generic since NetBox 4.3: confirm the GFK limit works with it.
-- Whether `origin` choices should be a model instead (MSPs may want their own list). Start
-  with choices + `FIELD_CHOICES` override support, like NetBox core.
-
-## First steps
-
-1. Ask Louis to create `Packetflow-be/netbox-access-paths` (public) or confirm you may.
-2. Scaffold from iec62443, models + migrations + tests (aim for the same test style).
-3. Dogfood: enter Packetflow's own paths in the **demo branch on nbx01**
-   (header `X-NetBox-Branch`) or on tst02, not prod main. Example route: office → NetBird → aut01.
-4. Screenshot the tenant tab and path detail (desktop + phone) before showing Louis.
-5. Near release: propose a CHG-PACK record in the vault (see `~/packetflow/CLAUDE.md`).
-
-## Decided while building v0.1 (2026-11-12)
+The sketch left three open: holders as M2M or NetBox contact assignments, whether a GFK to
+`ipam.Service` (whose parent is itself generic since NetBox 4.3) works, and origin as choices or a model.
 
 - **Holders**: explicit M2M to contacts and contact groups. NetBox 4.7's `ContactsMixin` assigns contacts
   only, not groups. A grant to a group covers its sub-groups (walked through `parent`, so it works whether
