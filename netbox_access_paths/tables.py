@@ -56,7 +56,7 @@ class AccessPathTable(PrimaryModelTable):
     tenant = tables.Column(verbose_name=_('Customer'), linkify=True)
     route = tables.Column(verbose_name=_('Route'), linkify=True)
     origin = columns.ChoiceFieldColumn(verbose_name=_('Origin'), accessor=tables.A('route__origin'),
-                                       orderable=False)
+                                       color=lambda record: record.route.get_origin_color(), orderable=False)
     target = columns.TemplateColumn(verbose_name=_('Target'), template_code=TARGET, orderable=False)
     chain = columns.TemplateColumn(verbose_name=_('Through'), template_code=PATH_HOPS, orderable=False)
     method = columns.ChoiceFieldColumn(verbose_name=_('Method'))

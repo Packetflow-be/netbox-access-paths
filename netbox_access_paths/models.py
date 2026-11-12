@@ -190,14 +190,25 @@ class AccessPath(PrimaryModel):
         parts = []
         if self.target_type_id and self.target_id:
             try:
-                parts.append(str(self.target))
+                target = self.target
             except ObjectDoesNotExist:
-                pass
+                target = None
+            if target is not None:
+                parts.append(self._target_name(target))
         if not parts and self.target_url:
             parts.append(urlsplit(self.target_url).hostname or self.target_url)
         if self.method:
             parts.append(str(self.get_method_display()))
         return ' '.join(parts)[:100]
+
+    @staticmethod
+    def _target_name(target):
+        """A service is named with its parent ("fw01 https"), an IP address without its mask."""
+        if target._meta.label_lower == 'ipam.service' and target.parent is not None:
+            return f'{target.parent} {target.name}'
+        if target._meta.label_lower == 'ipam.ipaddress':
+            return str(target.address).split('/')[0]  # a string until the object is reloaded
+        return str(target)
 
     def clean(self):
         super().clean()
@@ -270,10 +281,14 @@ class AccessPath(PrimaryModel):
         return target_tenant is not None and target_tenant.pk != self.tenant_id
 
     @property
+    def target_label(self):
+        """The target object as shown in tables and exports: a service with its parent, an IP without its mask."""
+        target = self.target if self.target_type_id else None
+        return self._target_name(target) if target is not None else ''
+
+    @property
     def target_display(self):
-        if self.target_type_id and self.target is not None:
-            return str(self.target)
-        return self.target_url
+        return self.target_label or self.target_url
 
     @property
     def all_hops(self):

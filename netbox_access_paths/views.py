@@ -335,6 +335,11 @@ class TenantAccessPathsView(generic.ObjectChildrenView):
     def get_children(self, request, parent):
         return path_queryset(AccessPath.objects.restrict(request.user, 'view').filter(tenant=parent))
 
+    def get_table(self, *args, **kwargs):
+        table = super().get_table(*args, **kwargs)
+        table.columns.hide('tenant')  # every row is this customer
+        return table
+
 
 def _held_by(contact):
     return AccessPath.objects.filter(queries.held_by_q([contact])).distinct()

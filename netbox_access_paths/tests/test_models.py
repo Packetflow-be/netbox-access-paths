@@ -78,6 +78,12 @@ class AccessPathTest(TestCase):
         url_path = self.path(target_url='https://portal.example.com/admin', method='web')
         url_path.save()
         self.assertEqual(str(url_path), 'portal.example.com Web portal')
+        # A service is named with its parent, an IP address without its mask
+        service = Service.objects.create(parent=self.dc01, name='https', port_mappings=['tcp/443'])
+        self.assertEqual(self.path(target=service, method='web').default_name(), 'dc01 https Web portal')
+        iface = Interface.objects.create(device=self.dc01, name='eth0', type='1000base-t')
+        ip = IPAddress.objects.create(address='10.0.0.5/24', assigned_object=iface)
+        self.assertEqual(self.path(target=ip, method='ssh').default_name(), '10.0.0.5 SSH')
 
     def test_approval_is_dated(self):
         path = self.path(target=self.dc01, approved_by=self.contact)

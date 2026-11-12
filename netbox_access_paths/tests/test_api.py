@@ -12,15 +12,16 @@ from netbox_access_paths.models import AccessHop, AccessPath, AccessRoute
 RELATED_VIEW = (
     'tenancy.view_tenant', 'tenancy.view_contact', 'tenancy.view_contactgroup', 'ipam.view_prefix',
     'ipam.view_service', 'dcim.view_device', 'virtualization.view_virtualmachine', 'vpn.view_tunnel',
-    'netbox_access_paths.view_accessroute', 'netbox_access_paths.view_accesspath',
 )
+ROUTE_VIEW = ('netbox_access_paths.view_accessroute',)
+PATH_VIEW = ('netbox_access_paths.view_accesspath',)
 
 
 class AccessRouteAPITest(APIViewTestCases.APIViewTestCase):
     model = AccessRoute
     view_namespace = 'plugins-api:netbox_access_paths'
     graphql_base_name = 'access_paths_route'
-    user_permissions = RELATED_VIEW
+    user_permissions = RELATED_VIEW + PATH_VIEW
     brief_fields = ['description', 'display', 'id', 'name', 'origin', 'url']
     bulk_update_data = {
         'origin': 'home',
@@ -50,7 +51,7 @@ class AccessPathAPITest(APIViewTestCases.APIViewTestCase):
     model = AccessPath
     view_namespace = 'plugins-api:netbox_access_paths'
     graphql_base_name = 'access_paths_path'
-    user_permissions = RELATED_VIEW
+    user_permissions = RELATED_VIEW + ROUTE_VIEW
     brief_fields = ['description', 'display', 'id', 'method', 'name', 'status', 'url']
     bulk_update_data = {
         'status': 'disabled',
@@ -87,8 +88,10 @@ class AccessHopAPITest(APIViewTestCases.APIViewTestCase):
     model = AccessHop
     view_namespace = 'plugins-api:netbox_access_paths'
     graphql_base_name = 'access_paths_hop'
-    user_permissions = RELATED_VIEW
+    user_permissions = RELATED_VIEW + ROUTE_VIEW + PATH_VIEW
     brief_fields = ['description', 'display', 'id', 'label', 'position', 'url']
+    # The default (create_data[0]) would add a label to a hop that runs through a device: refused, as it should be
+    update_data = {'position': 9, 'description': 'moved'}
     bulk_update_data = {
         'description': 'New description',
     }

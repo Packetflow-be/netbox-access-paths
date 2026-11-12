@@ -124,7 +124,7 @@ class Command(BaseCommand):
         tunnel = Tunnel.objects.create(name='MSP - Acme IPsec', status='active', encapsulation='ipsec-tunnel',
                                        tenant=tenants['Acme Bakery'], description=PREFIX)
 
-        support = ContactGroup.objects.create(name=f'{PREFIX}: MSP support', slug=f'{SLUG}-support',
+        support = ContactGroup.objects.create(name='Demo MSP support', slug=f'{SLUG}-support',
                                               description=PREFIX)
         tier2 = ContactGroup.objects.create(name='Tier 2', slug=f'{SLUG}-tier-2', parent=support, description=PREFIX)
 

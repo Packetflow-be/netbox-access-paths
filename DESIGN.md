@@ -119,3 +119,17 @@ holder, hop device/VM, review_due, expired, lacks_mfa), REST API, GraphQL, searc
    (header `X-NetBox-Branch`) or on tst02, not prod main. Example route: office → NetBird → aut01.
 4. Screenshot the tenant tab and path detail (desktop + phone) before showing Louis.
 5. Near release: propose a CHG-PACK record in the vault (see `~/packetflow/CLAUDE.md`).
+
+## Decided while building v0.1 (2026-11-12)
+
+- **Holders**: explicit M2M to contacts and contact groups. NetBox 4.7's `ContactsMixin` assigns contacts
+  only, not groups. A grant to a group covers its sub-groups (walked through `parent`, so it works whether
+  contact groups are MPTT or ltree).
+- **Service targets**: the GFK points at the `ipam.Service` itself; its generic parent doesn't matter. The device
+  and VM tabs count paths into their services and IP addresses as paths into them.
+- **Origin**: choices with `key`, so `FIELD_CHOICES['netbox_access_paths.AccessRoute.origin']` (or `...+`)
+  replaces or extends them; the same for method, authentication and status.
+- **Deleted target**: the path stays, target cleared, shown as "target missing" in the review queue.
+- **Credential reference** is left out of the questionnaire export unless `export_credential_ref` is set.
+- Added beyond the sketch: `manage.py access_paths_demo`, a `needs_review` filter (any reason), the export
+  takes any path filter (`/plugins/access-paths/export/?holder_id=..`).

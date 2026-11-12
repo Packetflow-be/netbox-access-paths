@@ -18,7 +18,7 @@ class OriginChoices(ChoiceSet):
 
     CHOICES = [
         Choice(OFFICE, _('Office network'), color='blue'),
-        Choice(ZTNA, _('ZTNA / VPN client (any device on it)'), color='purple'),
+        Choice(ZTNA, _('ZTNA / VPN client'), color='purple'),
         Choice(HOME, _('Home or remote worker'), color='cyan'),
         Choice(CUSTOMER_SITE, _('At the customer site'), color='green'),
         Choice(INTERNET, _('Anywhere (internet)'), color='orange'),
@@ -44,9 +44,9 @@ class AccessMethodChoices(ChoiceSet):
         Choice(SSH, 'SSH', color='indigo'),
         Choice(WEB, _('Web portal'), color='cyan'),
         Choice(RMM, _('RMM agent'), color='teal'),
-        Choice(VENDOR_REMOTE, _('Vendor remote tool (TeamViewer, AnyDesk, ...)'), color='orange'),
+        Choice(VENDOR_REMOTE, _('Vendor remote tool'), color='orange'),
         Choice(VPN_NETWORK, _('VPN into the network'), color='red'),
-        Choice(CONSOLE, _('Console (iDRAC, iLO, hypervisor, serial)'), color='purple'),
+        Choice(CONSOLE, _('Console'), color='purple'),
         Choice(API, 'API', color='gray'),
         Choice(OTHER, _('Other'), color='gray'),
     ]
@@ -87,6 +87,6 @@ class AccessPathStatusChoices(ChoiceSet):
     CHOICES = [
         Choice(ACTIVE, _('Active'), color='green'),
         Choice(PLANNED, _('Planned'), color='cyan'),
-        Choice(BREAK_GLASS, _('Break-glass (emergency only)'), color='red'),
+        Choice(BREAK_GLASS, _('Break-glass'), color='red'),
         Choice(DISABLED, _('Disabled'), color='gray'),
     ]

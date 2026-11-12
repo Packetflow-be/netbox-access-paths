@@ -141,8 +141,8 @@ class AccessPathFilterSetTest(TestCase, ChangeLoggedFilterSetTestMixin):
         self.assertEqual(self.count({'status': ['break_glass']}), 1)
 
     def test_target(self):
-        self.assertEqual(self.count({'target_type': 'dcim.device'}), 1)
-        self.assertEqual(self.count({'target_type': 'dcim.device', 'target_id': [self.dc01.pk]}), 1)
+        self.assertEqual(self.count({'target_type': ['dcim.device']}), 1)
+        self.assertEqual(self.count({'target_type': ['dcim.device'], 'target_id': [self.dc01.pk]}), 1)
         # Into a device: the device itself and its IP addresses
         self.assertEqual(self.count({'device_id': [self.dc01.pk]}), 2)
         self.assertEqual(self.count({'virtual_machine_id': [self.vm.pk]}), 1)

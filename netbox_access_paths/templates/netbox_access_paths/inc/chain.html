@@ -7,6 +7,10 @@
   .ap-group { border: 1px dashed var(--tblr-border-color, #adb5bd); border-radius: .375rem; padding: .35rem .6rem; }
   .ap-caption { font-size: .75rem; color: var(--tblr-secondary, #6c757d); white-space: nowrap; }
   .ap-arrow { align-self: center; color: var(--tblr-secondary, #6c757d); font-size: 1.25rem; line-height: 1; }
+  @media (max-width: 575.98px) {
+    .ap-chain { flex-direction: column; }
+    .ap-arrow { align-self: flex-start; margin-left: 1rem; transform: rotate(90deg); }
+  }
 </style>
 <div class="card-body">
   <div class="d-flex flex-wrap align-items-stretch column-gap-2 ap-chain">

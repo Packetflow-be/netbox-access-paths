@@ -20,6 +20,8 @@ whom, and when it's due for review.
    (who)          (origin)       └────── shared route ─────┘  (method)  (target, tenant "Acme")
 ```
 
+![An access path: origin, route hops, customer-side hops, method and target](docs/path.png)
+
 ## What you get
 
 - **Routes**: the MSP-side chain you reuse for every customer (office → VPN/ZTNA → jump host).
@@ -97,6 +99,12 @@ four routes and seven paths (all named "Access paths demo"); `--delete` removes 
 - **Contact → Access paths tab**: everything the person may use, directly or through a group.
 - **Access paths → Review queue**: expired, review due, without MFA, break-glass, target missing.
 - **Path page**: the chain drawn left to right, from origin through route and customer-side hops to the target.
+
+| Customer tab with the questionnaire export | Jump host: every customer behind it |
+|---|---|
+| ![Tenant tab](docs/tenant.png) | ![Device tab](docs/device.png) |
+
+![Review queue](docs/review.png)
 
 Filters for all of these exist on the path list and the REST API (`/api/plugins/access-paths/paths/`):
 `tenant_id`, `holder_id` (groups included), `device_id` / `virtual_machine_id` (into, services and IPs
