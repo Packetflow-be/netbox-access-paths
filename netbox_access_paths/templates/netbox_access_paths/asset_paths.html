@@ -1,0 +1,61 @@
+{% extends 'generic/object.html' %}
+{% load i18n %}
+
+{% block content %}
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <h2 class="card-header">
+          {% trans "Through this" %} {{ object|meta:"verbose_name" }}
+          <span class="badge text-bg-secondary ms-1">{{ through_count }}</span>
+        </h2>
+        {% if through_by_tenant %}
+          <div class="card-body small text-secondary">
+            {% if routes %}
+              {% trans "It is a hop on the route" %}{{ routes|length|pluralize }}
+              {% for route in routes %}{{ route|linkify }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+            {% endif %}
+            {% blocktrans count customers=through_by_tenant|length %}If it is compromised or down, these paths into {{ customers }} customer are affected.{% plural %}If it is compromised or down, these paths into {{ customers }} customers are affected.{% endblocktrans %}
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr><th>{% trans "Path" %}</th><th>{% trans "Target" %}</th><th>{% trans "Method" %}</th><th>{% trans "Who" %}</th><th>{% trans "Status" %}</th></tr>
+              </thead>
+              <tbody>
+                {% for tenant, paths in through_by_tenant %}
+                  <tr class="table-active"><th colspan="5">{{ tenant|linkify }} <span class="badge text-bg-secondary">{{ paths|length }}</span></th></tr>
+                  {% for path in paths %}{% include 'netbox_access_paths/inc/path_row.html' %}{% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card-body text-secondary">{% trans "No access path runs through it." %}</div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h2 class="card-header">
+          {% trans "Into this" %} {{ object|meta:"verbose_name" }}
+          <span class="badge text-bg-secondary ms-1">{{ into|length }}</span>
+        </h2>
+        {% if into %}
+          <div class="card-body small text-secondary">{% trans "Paths whose target is this object, one of its application services or one of its IP addresses." %}</div>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr><th>{% trans "Path" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Target" %}</th><th>{% trans "Method" %}</th><th>{% trans "Who" %}</th><th>{% trans "Status" %}</th></tr>
+              </thead>
+              <tbody>
+                {% for path in into %}{% include 'netbox_access_paths/inc/path_row.html' with show_tenant=True %}{% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card-body text-secondary">{% trans "No access path leads into it." %}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
