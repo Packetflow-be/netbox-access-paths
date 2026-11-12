@@ -1,0 +1,11 @@
+{% extends 'generic/object_list.html' %}
+{% load i18n %}
+
+{% block extra_controls %}
+  <a href="{% url 'plugins:netbox_access_paths:review' %}" class="btn btn-outline-secondary">
+    <i class="mdi mdi-clipboard-check-outline"></i> {% trans "Review queue" %}
+  </a>
+  <a href="{% url 'plugins:netbox_access_paths:export' %}?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}format=csv" class="btn btn-outline-primary" title="{% trans 'The paths matching the current filters, one row each, for supplier and NIS2 questionnaires' %}">
+    <i class="mdi mdi-download"></i> {% trans "Questionnaire" %}
+  </a>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% load i18n %}<tr>
+  <td>{{ path|linkify }}</td>
+  {% if show_tenant %}<td>{{ path.tenant|linkify }}</td>{% endif %}
+  <td>{% include 'netbox_access_paths/inc/target.html' with object=path %}</td>
+  <td>{% badge path.get_method_display bg_color=path.get_method_color %}</td>
+  <td>{% include 'netbox_access_paths/inc/holders.html' %}</td>
+  <td>{% include 'netbox_access_paths/inc/status_attr.html' with object=path %}{% if path.lacks_mfa %} <span class="badge text-bg-warning">{% trans "no MFA" %}</span>{% endif %}</td>
+</tr>

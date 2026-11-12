@@ -1,0 +1,22 @@
+{% extends 'generic/object_children.html' %}
+{% load i18n %}
+
+{% block table_controls %}
+  <div class="d-flex flex-wrap gap-2 mb-3 d-print-none">
+    {% if perms.netbox_access_paths.add_accesspath %}
+      <a href="{% url 'plugins:netbox_access_paths:accesspath_add' %}?tenant={{ object.pk }}&return_url={{ request.path|urlencode }}" class="btn btn-sm btn-primary">
+        <i class="mdi mdi-plus-thick"></i> {% trans "Add access path" %}
+      </a>
+    {% endif %}
+    <a href="{% url 'plugins:netbox_access_paths:export' %}?tenant_id={{ object.pk }}&format=csv" class="btn btn-sm btn-outline-primary" title="{% trans 'One row per path, for supplier and NIS2 questionnaires' %}">
+      <i class="mdi mdi-download"></i> {% trans "Questionnaire (CSV)" %}
+    </a>
+    <a href="{% url 'plugins:netbox_access_paths:export' %}?tenant_id={{ object.pk }}&format=markdown" class="btn btn-sm btn-outline-primary">
+      <i class="mdi mdi-language-markdown-outline"></i> {% trans "Questionnaire (Markdown)" %}
+    </a>
+    <a href="{% url 'plugins:netbox_access_paths:review' %}?tenant_id={{ object.pk }}" class="btn btn-sm btn-outline-secondary">
+      <i class="mdi mdi-clipboard-check-outline"></i> {% trans "Review queue" %}
+    </a>
+  </div>
+  {{ block.super }}
+{% endblock table_controls %}

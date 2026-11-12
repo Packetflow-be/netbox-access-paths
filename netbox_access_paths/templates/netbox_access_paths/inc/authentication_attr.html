@@ -1,0 +1,2 @@
+{% load i18n %}{% badge object.get_authentication_display bg_color=object.get_authentication_color %}
+{% if object.lacks_mfa %}<span class="badge text-bg-warning">{% trans "no MFA" %}</span>{% endif %}

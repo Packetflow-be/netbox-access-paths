@@ -1,0 +1,8 @@
+{
+  "accesshop:api_list_objects": 12,
+  "accesshop:list_objects_with_permission": 16,
+  "accesspath:api_list_objects": 16,
+  "accesspath:list_objects_with_permission": 21,
+  "accessroute:api_list_objects": 14,
+  "accessroute:list_objects_with_permission": 18
+}

@@ -1,0 +1,73 @@
+{% extends 'ui/panels/_base.html' %}
+{% load i18n %}
+{% block panel_content %}
+<style>
+  .ap-chain { row-gap: .5rem; }
+  .ap-node { border: 1px solid var(--tblr-border-color, #dee2e6); border-radius: .375rem; padding: .35rem .6rem; }
+  .ap-group { border: 1px dashed var(--tblr-border-color, #adb5bd); border-radius: .375rem; padding: .35rem .6rem; }
+  .ap-caption { font-size: .75rem; color: var(--tblr-secondary, #6c757d); white-space: nowrap; }
+  .ap-arrow { align-self: center; color: var(--tblr-secondary, #6c757d); font-size: 1.25rem; line-height: 1; }
+  @media (max-width: 575.98px) {
+    .ap-chain { flex-direction: column; }
+    .ap-arrow { align-self: flex-start; margin-left: 1rem; transform: rotate(90deg); }
+  }
+</style>
+<div class="card-body">
+  <div class="d-flex flex-wrap align-items-stretch column-gap-2 ap-chain">
+
+    <div class="ap-node">
+      <div class="ap-caption">{% trans "Starts from" %}</div>
+      {% badge route.get_origin_display bg_color=route.get_origin_color %}
+      {% for prefix in route.origin_prefixes.all %}<div class="small">{{ prefix|linkify }}</div>{% endfor %}
+    </div>
+
+    {% if route_hops or path %}
+      <div class="ap-arrow" aria-hidden="true"><i class="mdi mdi-arrow-right-thin"></i></div>
+      <div class="ap-group">
+        <div class="ap-caption"><i class="mdi mdi-routes"></i> {% trans "Route" %}{% if path %}: {{ route|linkify }}{% endif %}</div>
+        <div class="d-flex flex-wrap align-items-center gap-1">
+          {% for hop in route_hops %}
+            {% include 'netbox_access_paths/inc/hop.html' %}{% if not forloop.last %}<i class="mdi mdi-chevron-right text-secondary" aria-hidden="true"></i>{% endif %}
+          {% empty %}
+            <span class="text-secondary small">{% trans "direct, no hops" %}</span>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if path %}
+      {% if path_hops %}
+        <div class="ap-arrow" aria-hidden="true"><i class="mdi mdi-arrow-right-thin"></i></div>
+        <div class="ap-group">
+          <div class="ap-caption"><i class="mdi mdi-domain"></i> {% trans "Customer side" %}</div>
+          <div class="d-flex flex-wrap align-items-center gap-1">
+            {% for hop in path_hops %}
+              {% include 'netbox_access_paths/inc/hop.html' %}{% if not forloop.last %}<i class="mdi mdi-chevron-right text-secondary" aria-hidden="true"></i>{% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="ap-arrow" aria-hidden="true"><i class="mdi mdi-arrow-right-thin"></i></div>
+      <div class="ap-node">
+        <div class="ap-caption">{% trans "Method" %}</div>
+        {% badge path.get_method_display bg_color=path.get_method_color %}
+        <div class="small mt-1">{% badge path.get_authentication_display bg_color=path.get_authentication_color %}</div>
+      </div>
+
+      <div class="ap-arrow" aria-hidden="true"><i class="mdi mdi-arrow-right-thin"></i></div>
+      <div class="ap-node">
+        <div class="ap-caption">{% trans "Target" %} &middot; {{ path.tenant|linkify }}</div>
+        {% include 'netbox_access_paths/inc/target.html' with object=path %}
+      </div>
+    {% else %}
+      <div class="ap-arrow" aria-hidden="true"><i class="mdi mdi-arrow-right-thin"></i></div>
+      <div class="ap-node">
+        <div class="ap-caption">{% trans "Used by" %}</div>
+        <a href="{% url 'plugins:netbox_access_paths:accesspath_list' %}?route_id={{ route.pk }}">{% blocktrans count n=path_count %}{{ n }} path{% plural %}{{ n }} paths{% endblocktrans %}</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

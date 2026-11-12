@@ -1,0 +1,64 @@
+{% extends 'generic/_base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Access review" %}{% if tenant %}: {{ tenant }}{% endif %}{% endblock %}
+
+{% block subtitle %}
+  <div class="text-secondary">
+    {% blocktrans count n=total %}{{ n }} access path needs a person to look at it.{% plural %}{{ n }} access paths need a person to look at them.{% endblocktrans %}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label" for="{{ form.tenant_id.id_for_label }}">{{ form.tenant_id.label }}</label>
+          {{ form.tenant_id }}
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100"><i class="mdi mdi-filter"></i> {% trans "Filter" %}</button>
+        </div>
+        <div class="col-md-2">
+          <a href="{% url 'plugins:netbox_access_paths:accesspath_list' %}?needs_review=true{% if tenant %}&tenant_id={{ tenant.pk }}{% endif %}" class="btn btn-outline-secondary w-100"><i class="mdi mdi-table"></i> {% trans "As a list" %}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% for section in sections %}
+    <div class="card" id="{{ section.key }}">
+      <h2 class="card-header">
+        {{ section.title }}
+        <span class="badge {% if section.count %}text-bg-warning{% else %}text-bg-success{% endif %} ms-1">{{ section.count }}</span>
+        {% if section.count %}
+          <div class="card-actions">
+            <a href="{% url 'plugins:netbox_access_paths:accesspath_list' %}?{{ section.key }}=true{% if tenant %}&tenant_id={{ tenant.pk }}{% endif %}" class="btn btn-ghost-primary btn-sm">
+              <i class="mdi mdi-table"></i> {% trans "All in the list" %}
+            </a>
+          </div>
+        {% endif %}
+      </h2>
+      <div class="card-body small text-secondary py-2">{{ section.help_text }}</div>
+      {% if section.paths %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>{% trans "Path" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Target" %}</th>
+                <th>{% trans "Method" %}</th><th>{% trans "Who" %}</th><th>{% trans "Status" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for path in section.paths %}{% include 'netbox_access_paths/inc/path_row.html' with show_tenant=True %}{% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if section.count > limit %}
+          <div class="card-footer small text-secondary">{% blocktrans with n=limit %}The first {{ n }} are shown.{% endblocktrans %}</div>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endblock %}

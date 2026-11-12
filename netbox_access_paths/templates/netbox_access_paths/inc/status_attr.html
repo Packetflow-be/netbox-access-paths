@@ -1,0 +1,3 @@
+{% load i18n %}{% badge object.get_status_display bg_color=object.get_status_color %}
+{% if object.is_expired %}<span class="badge text-bg-danger">{% trans "expired" %}</span>{% endif %}
+{% if object.is_review_due %}<span class="badge text-bg-warning">{% trans "review due" %}</span>{% endif %}
