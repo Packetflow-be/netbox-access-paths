@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.1.0)
+## 0.1.0 (2026-11-12)
 
 First version, for NetBox 4.7 (4.7.0 and later; 4.8 allowed).
 
