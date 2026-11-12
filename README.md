@@ -1,5 +1,9 @@
 # netbox-access-paths
 
+[![PyPI](https://img.shields.io/pypi/v/netbox-access-paths)](https://pypi.org/project/netbox-access-paths/)
+[![Python](https://img.shields.io/pypi/pyversions/netbox-access-paths)](https://pypi.org/project/netbox-access-paths/)
+[![CI](https://github.com/Packetflow-be/netbox-access-paths/actions/workflows/ci.yml/badge.svg)](https://github.com/Packetflow-be/netbox-access-paths/actions/workflows/ci.yml)
+
 **Document how your team reaches every customer system, in NetBox.**
 
 Every MSP has the same tribal knowledge: *to get into customer X, connect to the
@@ -47,8 +51,8 @@ paths; your RDM/PAM/ZTNA tools keep doing the access.
 
 ## Status
 
-Alpha (0.1). NetBox 4.7–4.8, Python 3.12+, Apache-2.0. Feedback from MSPs running NetBox is
-welcome: open an issue.
+Alpha, on PyPI as [netbox-access-paths](https://pypi.org/project/netbox-access-paths/) (0.1.0).
+NetBox 4.7–4.8, Python 3.12+, Apache-2.0. Feedback from MSPs running NetBox is welcome: open an issue.
 
 ## Install
 
