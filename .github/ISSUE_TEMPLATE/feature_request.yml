@@ -1,0 +1,19 @@
+name: Feature request
+description: A field, target type, view or export that is missing
+labels: [enhancement]
+body:
+  - type: textarea
+    id: case
+    attributes:
+      label: The access you can't document today
+      description: A real (anonymised) example, e.g. "VPN into a customer VLAN, valid for every server in it".
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like the plugin to do
+  - type: textarea
+    id: today
+    attributes:
+      label: How you handle it now
