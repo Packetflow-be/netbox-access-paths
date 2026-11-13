@@ -1,0 +1,7 @@
+{% extends 'generic/object.html' %}
+
+{% block extra_controls %}
+  {% if perms.netbox_access_paths.change_accesspath %}
+    {% include 'netbox_access_paths/inc/mark_reviewed_form.html' with path=object %}
+  {% endif %}
+{% endblock %}

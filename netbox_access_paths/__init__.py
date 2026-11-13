@@ -1,6 +1,6 @@
 from netbox.plugins import PluginConfig
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 class AccessPathsConfig(PluginConfig):
@@ -16,11 +16,16 @@ class AccessPathsConfig(PluginConfig):
     default_settings = {
         # Include the credential reference column in the questionnaire export (CSV/Markdown for customers).
         'export_credential_ref': False,
+        # Days between a review ("Mark reviewed") and the next review date.
+        'review_interval_days': 365,
+        # A path into a scope (prefix, VLAN, cluster, site) covers only the devices and VMs in it that belong to the
+        # path's tenant or to no tenant. Set to False to cover everything in the scope whatever its tenant.
+        'scope_same_tenant': True,
     }
 
     def ready(self):
         super().ready()
-        from . import signals
+        from . import signals, widgets  # noqa: F401  (widgets registers the dashboard widget)
         signals.connect()
 
 

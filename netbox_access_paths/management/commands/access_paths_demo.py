@@ -1,5 +1,5 @@
 """
-Demo data: a small fictional MSP with three customers, four routes and seven access paths, so a new user sees
+Demo data: a small fictional MSP with three customers, four routes and nine access paths, so a new user sees
 populated tenant, device and contact tabs, a path chain and a review queue within minutes. Everything it creates
 is named or described "Access paths demo" (tenants in the tenant group of that name), and --delete removes
 exactly that.
@@ -120,6 +120,8 @@ class Command(BaseCommand):
         VMInterface.objects.create(virtual_machine=globex_app, name='eth0')
         acme_fw_https = Service.objects.create(parent=acme_fw, name='https', port_mappings=['tcp/443'],
                                                description=PREFIX)
+        globex_lan = Prefix.objects.create(prefix='10.20.0.0/24', tenant=tenants['Globex Logistics'],
+                                           description=PREFIX)
         office_vlan = Prefix.objects.create(prefix='10.99.10.0/24', tenant=tenants['Demo MSP'], description=PREFIX)
         tunnel = Tunnel.objects.create(name='MSP - Acme IPsec', status='active', encapsulation='ipsec-tunnel',
                                        tenant=tenants['Acme Bakery'], description=PREFIX)
@@ -163,7 +165,8 @@ class Command(BaseCommand):
 
         path('Acme Bakery', office, 'rdp', tunnel, acme_fw, target=acme_dc, groups=[support],
              authentication='sso_mfa', credential_ref='Password manager: Acme Bakery / dc01 admin',
-             approved_by=acme_it, approved_on=today - days(150), review_by=today + days(30))
+             approved_by=acme_it, approved_on=today - days(150), reviewed_on=today - days(335),
+             review_by=today + days(30))
         path('Acme Bakery', ztna, 'web', target=acme_fw_https, holders=[alex], authentication='mfa',
              approved_by=acme_it, approved_on=today - days(400), review_by=today - days(35),
              description='Firewall management GUI')
@@ -173,6 +176,13 @@ class Command(BaseCommand):
              review_by=today + days(200))
         path('Globex Logistics', office, 'web', target=globex_nas_ip, holders=[sam], authentication='password',
              description='NAS web interface, local admin account')
+        # Scope targets: everything in a prefix, everything the tenant owns
+        path('Globex Logistics', ztna, 'vpn_network', target=globex_lan, holders=[alex, sam],
+             authentication='mfa', review_by=today + days(90),
+             description='Routed access to the whole server LAN')
+        path('Acme Bakery', anywhere, 'rmm', 'RMM cloud', name='RMM agent on every Acme machine',
+             target=tenants['Acme Bakery'], groups=[support], authentication='sso_mfa',
+             approved_by=acme_it, approved_on=today - days(150), review_by=today + days(215))
         path('Initech Dental', anywhere, 'vendor_remote', 'TeamViewer cloud', name='DentalSoft vendor support',
              target=initech_srv, holders=[vendor], authentication='shared_account',
              approved_by=initech_owner, approved_on=today - days(60), expires=today - days(5),

@@ -64,7 +64,7 @@ class AccessPathTest(TestCase):
 
     def test_target_type_is_limited(self):
         with self.assertRaises(ValidationError):
-            self.path(target=self.site).full_clean()
+            self.path(target=self.dc01.role).full_clean()
 
     def test_target_must_exist(self):
         path = self.path(target_type=ContentType.objects.get_for_model(self.dc01), target_id=999999)

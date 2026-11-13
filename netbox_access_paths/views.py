@@ -1,14 +1,19 @@
 from itertools import groupby
 
+from django.contrib import messages
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 from django.views.generic import View
 
 from dcim.models import Device
 from extras.ui.panels import CustomFieldsPanel, TagsPanel
+from netbox.object_actions import AddObject, BulkDelete, BulkEdit, BulkExport, BulkImport, ObjectAction
 from netbox.ui import actions, attrs, layout, panels
 from netbox.views import generic
 from tenancy.models import Contact, Tenant
@@ -18,6 +23,7 @@ from virtualization.models import VirtualMachine
 
 from . import export, filtersets, forms, queries, tables
 from .models import AccessHop, AccessPath, AccessRoute
+from .utils import review_interval_days
 
 HOP_RELATED = ('hops__device', 'hops__virtual_machine', 'hops__tunnel')
 ROUTE_HOP_RELATED = tuple(f'route__{h}' for h in HOP_RELATED)
@@ -87,6 +93,8 @@ class AccessPathWhoPanel(panels.ObjectAttributesPanel):
 class AccessPathApprovalPanel(panels.ObjectAttributesPanel):
     approved_by = attrs.RelatedObjectAttr('approved_by', linkify=True, label=_('Approved by'))
     approved_on = attrs.DateTimeAttr('approved_on', spec='date', label=_('Approved on'))
+    reviewed_on = attrs.DateTimeAttr('reviewed_on', spec='date', label=_('Last reviewed'))
+    reviewed_by = attrs.TextAttr('reviewed_by', label=_('Reviewed by'))
     review_by = attrs.DateTimeAttr('review_by', spec='date', label=_('Review by'))
     expires = attrs.DateTimeAttr('expires', spec='date', label=_('Expires'))
 
@@ -188,9 +196,19 @@ class AccessRouteBulkDeleteView(generic.BulkDeleteView):
 # Paths
 #
 
+class MarkReviewed(ObjectAction):
+    """Record a review of the selected paths: reviewed today, by this user, next review one interval from now."""
+    name = 'mark_reviewed'
+    label = _('Mark Reviewed')
+    multi = True
+    permissions_required = {'change'}
+    template_name = 'netbox_access_paths/buttons/mark_reviewed.html'
+
+
 @register_model_view(AccessPath, 'list', path='', detail=False)
 class AccessPathListView(generic.ObjectListView):
     queryset = path_queryset()
+    actions = (AddObject, BulkImport, BulkExport, BulkEdit, MarkReviewed, BulkDelete)
     filterset = filtersets.AccessPathFilterSet
     filterset_form = forms.AccessPathFilterForm
     table = tables.AccessPathTable
@@ -199,8 +217,11 @@ class AccessPathListView(generic.ObjectListView):
 
 @register_model_view(AccessPath)
 class AccessPathView(generic.ObjectView):
-    queryset = AccessPath.objects.select_related('tenant', 'route', 'approved_by')
-    template_name = 'generic/object.html'
+    queryset = AccessPath.objects.select_related('tenant', 'route', 'approved_by', 'reviewed_by')
+    template_name = 'netbox_access_paths/accesspath.html'
+
+    def get_extra_context(self, request, instance):
+        return {'review_interval_days': review_interval_days()}
     layout = layout.Layout(
         layout.Row(layout.Column(ChainPanel())),
         layout.Row(
@@ -248,6 +269,43 @@ class AccessPathBulkEditView(generic.BulkEditView):
     filterset = filtersets.AccessPathFilterSet
     table = tables.AccessPathTable
     form = forms.AccessPathBulkEditForm
+
+
+@register_model_view(AccessPath, 'mark_reviewed', path='mark-reviewed', detail=False)
+class AccessPathMarkReviewedView(ContentTypePermissionRequiredMixin, View):
+    """
+    POST only: mark the given paths (pk=..., or every path matching the list's filters with _all) as reviewed
+    today by the current user and set their next review date. Each change is in the change log.
+    """
+
+    def get_required_permission(self):
+        return 'netbox_access_paths.change_accesspath'
+
+    def post(self, request):
+        paths = AccessPath.objects.restrict(request.user, 'change')
+        if request.POST.get('_all'):
+            paths = filtersets.AccessPathFilterSet(request.GET, paths, request=request).qs
+        else:
+            pks = [pk for pk in request.POST.getlist('pk') if pk.isdigit()]
+            paths = paths.filter(pk__in=pks)
+        count = 0
+        for path in paths:
+            path.snapshot()
+            path.mark_reviewed(request.user)
+            path.save()
+            count += 1
+        if count:
+            messages.success(request, ngettext(
+                'Marked {count} access path as reviewed; next review in {days} days.',
+                'Marked {count} access paths as reviewed; next review in {days} days.',
+                count,
+            ).format(count=count, days=review_interval_days()))
+        else:
+            messages.warning(request, _('No access paths were selected.'))
+        return_url = request.POST.get('return_url') or request.GET.get('return_url')
+        if not return_url or not url_has_allowed_host_and_scheme(return_url, allowed_hosts={request.get_host()}):
+            return_url = reverse('plugins:netbox_access_paths:accesspath_list')
+        return redirect(return_url)
 
 
 @register_model_view(AccessPath, 'bulk_delete', path='delete', detail=False)
@@ -434,18 +492,6 @@ class VirtualMachineAccessPathsView(AssetAccessPathsView):
 # Review queue and the questionnaire export
 #
 
-REVIEW_SECTIONS = (
-    ('expired', _('Expired'), queries.expired_q, 'expires',
-     _('Past their expiry date but not disabled: remove the access, or extend it and record who approved that.')),
-    ('review_due', _('Review due'), queries.review_due_q, 'review_by',
-     _('Review date reached: confirm the path is still needed, then set the next review date.')),
-    ('lacks_mfa', _('Without MFA'), queries.lacks_mfa_q, None,
-     _('Password-only, shared account or unknown authentication.')),
-    ('break_glass', _('Break-glass'), queries.break_glass_q, None,
-     _('Emergency-only paths: check they are still sealed and who can open them.')),
-    ('target_missing', _('Target missing'), queries.target_missing_q, None,
-     _('The target was deleted from NetBox: point the path at its new target or disable it.')),
-)
 REVIEW_LIMIT = 50
 
 
@@ -466,7 +512,8 @@ class ReviewView(ContentTypePermissionRequiredMixin, View):
             else:
                 visible = visible.filter(tenant=tenant)
         sections = []
-        for key, title, q, date_field, help_text in REVIEW_SECTIONS:
+        can_mark = request.user.has_perm('netbox_access_paths.change_accesspath')
+        for key, title, q, date_field, help_text in queries.REVIEW_SECTIONS:
             matching = visible.filter(q())
             if date_field:
                 matching = matching.order_by(date_field, 'tenant__name', 'name')
@@ -477,6 +524,7 @@ class ReviewView(ContentTypePermissionRequiredMixin, View):
                 'title': title,
                 'help_text': help_text,
                 'date_field': date_field,
+                'markable': can_mark and key == 'review_due',
                 'count': matching.count(),
                 'paths': path_queryset(matching)[:REVIEW_LIMIT],
             })
@@ -486,6 +534,7 @@ class ReviewView(ContentTypePermissionRequiredMixin, View):
             'tenant': tenant,
             'total': visible.filter(queries.needs_review_q()).count(),
             'limit': REVIEW_LIMIT,
+            'review_interval_days': review_interval_days(),
         })
 
 

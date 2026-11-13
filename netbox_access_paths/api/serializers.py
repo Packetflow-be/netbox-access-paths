@@ -11,6 +11,7 @@ from netbox.api.gfk_fields import GFKSerializerField
 from netbox.api.serializers import PrimaryModelSerializer
 from tenancy.api.serializers import ContactGroupSerializer, ContactSerializer, TenantSerializer
 from tenancy.models import Contact, ContactGroup
+from users.api.serializers import UserSerializer
 from virtualization.api.serializers import VirtualMachineSerializer
 from vpn.api.serializers import TunnelSerializer
 
@@ -82,6 +83,8 @@ class AccessPathSerializer(PrimaryModelSerializer):
     authentication = ChoiceField(choices=AuthenticationChoices, required=False)
     status = ChoiceField(choices=AccessPathStatusChoices, required=False)
     approved_by = ContactSerializer(nested=True, required=False, allow_null=True)
+    reviewed_by = UserSerializer(nested=True, required=False, allow_null=True)
+    scope = serializers.BooleanField(source='is_scope', read_only=True)
     chain = serializers.SerializerMethodField(read_only=True)
     expired = serializers.BooleanField(source='is_expired', read_only=True)
     review_due = serializers.BooleanField(source='is_review_due', read_only=True)
@@ -92,8 +95,9 @@ class AccessPathSerializer(PrimaryModelSerializer):
         model = AccessPath
         fields = (
             'id', 'url', 'display_url', 'display', 'name', 'tenant', 'route', 'target_type', 'target_id', 'target',
-            'target_url', 'method', 'chain', 'holders', 'holder_groups', 'authentication', 'lacks_mfa',
-            'credential_ref', 'status', 'approved_by', 'approved_on', 'review_by', 'expires', 'expired',
+            'scope', 'target_url', 'method', 'chain', 'holders', 'holder_groups', 'authentication', 'lacks_mfa',
+            'credential_ref', 'status', 'approved_by', 'approved_on', 'reviewed_on', 'reviewed_by', 'review_by',
+            'expires', 'expired',
             'review_due', 'tenant_mismatch', 'description', 'owner', 'comments', 'tags', 'custom_fields', 'created',
             'last_updated',
         )

@@ -5,4 +5,5 @@
   <td>{% badge path.get_method_display bg_color=path.get_method_color %}</td>
   <td>{% include 'netbox_access_paths/inc/holders.html' %}</td>
   <td>{% include 'netbox_access_paths/inc/status_attr.html' with object=path %}{% if path.lacks_mfa %} <span class="badge text-bg-warning">{% trans "no MFA" %}</span>{% endif %}</td>
+  {% if markable %}<td class="text-end">{% include 'netbox_access_paths/inc/mark_reviewed_form.html' with button_class='btn-sm btn-outline-green' %}</td>{% endif %}
 </tr>

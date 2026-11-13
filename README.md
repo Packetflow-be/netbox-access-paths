@@ -33,16 +33,19 @@ whom, and when it's due for review.
 
 - **Routes**: the MSP-side chain you reuse for every customer (office → VPN/ZTNA → jump host).
   Define it once; dozens of paths share it.
-- **Paths**: route + customer-side hops + target (device, VM, service or URL) + method
+- **Paths**: route + customer-side hops + target (device, VM, service or URL; or a whole prefix, VLAN,
+  cluster, site or tenant) + method
   (RDP, SSH, web portal, RMM, vendor remote tool, ...), who may use it, MFA, and where the
   credential lives (a reference, never the secret).
 - **Approval and review**: approved by, review date, expiry for temporary or vendor access,
-  break-glass paths flagged.
+  break-glass paths flagged. *Mark reviewed* records who reviewed a path and when, and sets the next
+  review date.
 - **Answers, not just records**:
   - *Customer tab*: every way into this tenant, ready to paste into a questionnaire (CSV/Markdown export).
   - *Device/VM tab*: every path that runs **through** this box (blast radius) or **into** it.
   - *Contact tab*: everything this person can reach (offboarding).
-  - *Review queue*: paths past review date, expired, or without MFA.
+  - *Review queue*: paths past review date, expired, or without MFA; the same counts as a card for the
+    home screen.
 
 Built on NetBox objects you already have (tenants, contacts, devices, VMs, tunnels,
 services, prefixes); REST API, GraphQL and CSV import included.
@@ -54,7 +57,7 @@ paths; your RDM/PAM/ZTNA tools keep doing the access.
 
 ## Status
 
-Alpha, on PyPI as [netbox-access-paths](https://pypi.org/project/netbox-access-paths/) (0.1.0).
+Alpha, on PyPI as [netbox-access-paths](https://pypi.org/project/netbox-access-paths/) (0.2.0).
 NetBox 4.7–4.8, Python 3.12+, Apache-2.0.
 
 Feedback from MSPs running NetBox is welcome: tell us how you document access today in
@@ -82,7 +85,7 @@ PLUGINS_CONFIG = {"netbox_access_paths": {}}
 Then `python manage.py migrate` and restart NetBox (`netbox` and `netbox-rq`).
 
 To look around first: `python manage.py access_paths_demo` creates a fictional MSP with three customers,
-four routes and seven paths (all named "Access paths demo"); `--delete` removes them again.
+four routes and nine paths (all named "Access paths demo"); `--delete` removes them again.
 
 ## How it fits together
 
@@ -94,8 +97,25 @@ four routes and seven paths (all named "Access paths demo"); `--delete` removes 
 
 - A path's **target** is a device, VM, application service or IP address, or a URL (or both).
   The device tab counts a path into one of its services or IP addresses as a path into the device.
+- A target can also be a **scope**: a prefix, VLAN, cluster, site or tenant. One path then stands for
+  everything in it ("VPN into the server VLAN", "RMM agent on every machine of Acme"), and the device and
+  VM tabs list it under *into this*:
+
+  | Scope | Covers a device or VM when |
+  |---|---|
+  | Prefix | one of its IP addresses is inside the prefix, in the same VRF |
+  | VLAN | one of its interfaces carries the VLAN, or one of its IP addresses is in a prefix of the VLAN |
+  | Cluster | it is in the cluster |
+  | Site | it is at the site |
+  | Tenant | it belongs to the tenant |
+
+  Customers share address space and clusters, so a prefix, VLAN, cluster or site path covers only what
+  belongs to the path's tenant or to no tenant (`scope_same_tenant`, see Configuration).
 - **Holders** are contacts; **holder groups** are contact groups, and a grant to a group covers its sub-groups.
 - **Approved by / on**: setting an approver without a date dates it today; changing the approver does too.
+- **Mark reviewed** (path page, review queue, or *Mark Reviewed* for the selected rows of the list): sets
+  *last reviewed* to today and *reviewed by* to you, and moves *review by* one interval ahead
+  (`review_interval_days`, a year by default). The change log keeps every review.
 - A deleted target leaves its path behind, marked *target missing* in the review queue, rather than deleting
   documentation silently.
 - Disabled paths don't count as expired, due or without MFA.
@@ -109,6 +129,8 @@ four routes and seven paths (all named "Access paths demo"); `--delete` removes 
   the blast radius if it is compromised) and *into this*.
 - **Contact → Access paths tab**: everything the person may use, directly or through a group.
 - **Access paths → Review queue**: expired, review due, without MFA, break-glass, target missing.
+- **Home screen**: unlock the dashboard, *Add widget*, pick **Access review**: the review queue's five
+  counts, each linked to its list. Counts follow the viewer's permissions.
 - **Path page**: the chain drawn left to right, from origin through route and customer-side hops to the target.
 
 | Customer tab with the questionnaire export | Jump host: every customer behind it |
@@ -118,8 +140,8 @@ four routes and seven paths (all named "Access paths demo"); `--delete` removes 
 ![Review queue](docs/review.png)
 
 Filters for all of these exist on the path list and the REST API (`/api/plugins/access-paths/paths/`):
-`tenant_id`, `holder_id` (groups included), `device_id` / `virtual_machine_id` (into, services and IPs
-included), `hop_device_id` (through, route or path), `needs_review`, `expired`, `review_due`, `lacks_mfa`,
+`tenant_id`, `holder_id` (groups included), `device_id` / `virtual_machine_id` (into: services, IPs and
+scopes included), `hop_device_id` (through, route or path), `needs_review`, `expired`, `review_due`, `lacks_mfa`,
 `break_glass`, `target_missing`. The questionnaire export takes the same filters:
 `/plugins/access-paths/export/?tenant_id=4&format=markdown`. GraphQL: `access_paths_path_list` and friends.
 
@@ -130,6 +152,11 @@ PLUGINS_CONFIG = {
     "netbox_access_paths": {
         # Add the credential reference column to the questionnaire export (default: left out)
         "export_credential_ref": False,
+        # Days from "Mark reviewed" to the next review date
+        "review_interval_days": 365,
+        # A prefix, VLAN, cluster or site path covers only devices and VMs of the path's tenant (or of no
+        # tenant). False: it covers everything in the scope.
+        "scope_same_tenant": True,
     },
 }
 ```

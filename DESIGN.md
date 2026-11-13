@@ -93,6 +93,16 @@ Properties: `is_expired`, `is_review_due` (copy from iec62443), `lacks_mfa`
 Plus the standard set: list/detail/edit/bulk/CSV import, filtersets (tenant, method, status,
 holder, hop device/VM, review_due, expired, lacks_mfa), REST API, GraphQL, search indexes.
 
+## Added in 0.2 (2026-11-13)
+
+- **Scope targets** are more target types on the same generic key (prefix, VLAN, cluster, site, tenant),
+  not a fourth model. Membership is resolved when a device or VM asks "what leads into me" (`queries.scope_q`),
+  so nothing is stored per member and nothing goes stale. Customers share RFC 1918 space, sites and hosting
+  clusters, hence `scope_same_tenant`.
+- **Review sign-off** is two fields and one POST view; the review history is NetBox's change log, not a model.
+- **No notifications and no "last used" ingestion**: a dashboard widget shows the counts instead; session
+  logs belong in the session manager or PAM.
+
 ## Out of scope for v0.1
 
 - Storing secrets, launching connections, PAM features.

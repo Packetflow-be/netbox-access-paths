@@ -1,3 +1,4 @@
+import datetime
 from urllib.parse import urlsplit
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -12,14 +13,23 @@ from netbox.models import PrimaryModel
 
 from .choices import AccessMethodChoices, AccessPathStatusChoices, AuthenticationChoices, OriginChoices
 
-__all__ = ('AccessHop', 'AccessPath', 'AccessRoute', 'TARGET_MODELS')
+__all__ = ('AccessHop', 'AccessPath', 'AccessRoute', 'SCOPE_MODELS', 'TARGET_MODELS')
 
-# What a path can lead to: a device, a VM, an application service or an IP address (or a URL, see target_url)
+# A scope target stands for everything in it: every address in a prefix or VLAN, every device and VM in a cluster
+# or at a site, everything a tenant owns
+SCOPE_MODELS = ('ipam.prefix', 'ipam.vlan', 'virtualization.cluster', 'dcim.site', 'tenancy.tenant')
+
+# What a path can lead to: one device, VM, application service or IP address, or a scope (or a URL, see target_url)
 TARGET_MODELS = Q(
     Q(app_label='dcim', model='device') |
     Q(app_label='virtualization', model='virtualmachine') |
     Q(app_label='ipam', model='service') |
-    Q(app_label='ipam', model='ipaddress')
+    Q(app_label='ipam', model='ipaddress') |
+    Q(app_label='ipam', model='prefix') |
+    Q(app_label='ipam', model='vlan') |
+    Q(app_label='virtualization', model='cluster') |
+    Q(app_label='dcim', model='site') |
+    Q(app_label='tenancy', model='tenant')
 )
 
 
@@ -166,6 +176,20 @@ class AccessPath(PrimaryModel):
         null=True,
         help_text=_('Date by which the path should be reviewed'),
     )
+    reviewed_on = models.DateField(
+        verbose_name=_('last reviewed'),
+        blank=True,
+        null=True,
+        help_text=_('When someone last confirmed the path is still needed'),
+    )
+    reviewed_by = models.ForeignKey(
+        to='users.User',
+        on_delete=models.SET_NULL,
+        related_name='+',
+        verbose_name=_('reviewed by'),
+        blank=True,
+        null=True,
+    )
     expires = models.DateField(
         verbose_name=_('expires'),
         blank=True,
@@ -219,12 +243,15 @@ class AccessPath(PrimaryModel):
         if self.target_type_id:
             allowed = ContentType.objects.filter(TARGET_MODELS)
             if not allowed.filter(pk=self.target_type_id).exists():
-                raise ValidationError({'target_type': _('A target is a device, virtual machine, service or IP '
-                                                        'address.')})
+                raise ValidationError({'target_type': _(
+                    'A target is a device, virtual machine, service or IP address, or a scope: a prefix, VLAN, '
+                    'cluster, site or tenant.')})
             if self.target is None:
                 raise ValidationError({'target_id': _('The target object does not exist.')})
         if self.approved_on and self.approved_on > timezone.localdate():
             raise ValidationError({'approved_on': _('The approval date is in the future.')})
+        if self.reviewed_on and self.reviewed_on > timezone.localdate():
+            raise ValidationError({'reviewed_on': _('The review date is in the future.')})
 
     def save(self, *args, **kwargs):
         if not self.name:
@@ -238,6 +265,24 @@ class AccessPath(PrimaryModel):
             elif before and before['approved_by'] != self.approved_by_id and before['approved_on'] == self.approved_on:
                 self.approved_on = timezone.localdate()
         super().save(*args, **kwargs)
+
+    def mark_reviewed(self, user=None, interval_days=None):
+        """
+        Record that the path was reviewed today (by this user) and set the next review date. Not saved here.
+        """
+        from .utils import review_interval_days
+
+        today = timezone.localdate()
+        days = review_interval_days() if interval_days is None else interval_days
+        self.reviewed_on = today
+        self.reviewed_by = user
+        self.review_by = today + datetime.timedelta(days=days)
+
+    @property
+    def is_scope(self):
+        """The target is a prefix, VLAN, cluster, site or tenant: the path covers everything in it."""
+        return bool(self.target_type_id) and \
+            f'{self.target_type.app_label}.{self.target_type.model}' in SCOPE_MODELS
 
     @property
     def is_live(self):
@@ -267,6 +312,8 @@ class AccessPath(PrimaryModel):
         target = self.target
         if target is None:
             return None
+        if target._meta.label_lower == 'tenancy.tenant':
+            return target
         if getattr(target, 'tenant_id', None):
             return target.tenant
         parent = getattr(target, 'parent', None)
