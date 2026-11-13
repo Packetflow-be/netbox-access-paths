@@ -2,7 +2,10 @@
 
 [![PyPI](https://img.shields.io/pypi/v/netbox-access-paths)](https://pypi.org/project/netbox-access-paths/)
 [![Python](https://img.shields.io/pypi/pyversions/netbox-access-paths)](https://pypi.org/project/netbox-access-paths/)
+[![NetBox](https://img.shields.io/badge/NetBox-4.7%20%7C%204.8-blue)](https://github.com/netbox-community/netbox)
 [![CI](https://github.com/Packetflow-be/netbox-access-paths/actions/workflows/ci.yml/badge.svg)](https://github.com/Packetflow-be/netbox-access-paths/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/Packetflow-be/netbox-access-paths)](LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/netbox-access-paths)](https://pypi.org/project/netbox-access-paths/)
 
 **Document how your team reaches every customer system, in NetBox.**
 
@@ -52,7 +55,11 @@ paths; your RDM/PAM/ZTNA tools keep doing the access.
 ## Status
 
 Alpha, on PyPI as [netbox-access-paths](https://pypi.org/project/netbox-access-paths/) (0.1.0).
-NetBox 4.7–4.8, Python 3.12+, Apache-2.0. Feedback from MSPs running NetBox is welcome: open an issue.
+NetBox 4.7–4.8, Python 3.12+, Apache-2.0.
+
+Feedback from MSPs running NetBox is welcome: tell us how you document access today in
+[Discussions](https://github.com/Packetflow-be/netbox-access-paths/discussions), or open an
+[issue](https://github.com/Packetflow-be/netbox-access-paths/issues) for a bug or a missing field.
 
 ## Install
 
@@ -137,7 +144,8 @@ FIELD_CHOICES = {
 }
 ```
 
-Development: [docs/development.md](docs/development.md). Design notes: [DESIGN.md](DESIGN.md).
+Development: [docs/development.md](docs/development.md). Contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
+Design notes: [DESIGN.md](DESIGN.md). Security reports: [SECURITY.md](SECURITY.md).
 
 Made by [Packetflow](https://packetflow.be), from the same team as
-[netbox-iec62443](https://github.com/Packetflow-be/netbox-iec62443).
+[netbox-ot](https://github.com/Packetflow-be/netbox-ot).
