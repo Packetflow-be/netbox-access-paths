@@ -140,7 +140,7 @@ class AccessPathAPIBehaviourTest(APITestCase):
 
     def test_target_type_is_limited(self):
         url = reverse('plugins-api:netbox_access_paths-api:accesspath-list')
-        data = {'tenant': self.acme.pk, 'route': self.route.pk, 'target_type': 'dcim.site', 'target_id': 1,
+        data = {'tenant': self.acme.pk, 'route': self.route.pk, 'target_type': 'dcim.devicerole', 'target_id': 1,
                 'method': 'rdp'}
         response = self.client.post(url, data, format='json', **self.header)
         self.assertHttpStatus(response, status.HTTP_400_BAD_REQUEST)
