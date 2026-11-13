@@ -100,6 +100,7 @@ class AccessPathViewTest(PluginURLMixin, ViewTestCases.PrimaryObjectViewTestCase
             'Acme,Office,dcim.device,dc01,,rdp,Jane,mfa',
             'Acme,Office,virtualization.virtualmachine,vm01,,ssh,,key',
             'Acme,Office,,,https://portal.example.com,web,"Jane",',
+            'Acme,Office,tenancy.tenant,Acme,,rmm,,mfa',
         )
         ids = list(AccessPath.objects.order_by('pk').values_list('pk', flat=True))
         cls.csv_update_data = (

@@ -2,8 +2,8 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import gettext_lazy as _
 
-from dcim.models import Device
-from ipam.models import IPAddress, Prefix, Service
+from dcim.models import Device, Site
+from ipam.models import VLAN, IPAddress, Prefix, Service
 from netbox.forms import (
     PrimaryModelBulkEditForm,
     PrimaryModelFilterSetForm,
@@ -27,7 +27,7 @@ from utilities.forms.fields import (
 )
 from utilities.forms.rendering import FieldSet
 from utilities.forms.widgets import DatePicker
-from virtualization.models import VirtualMachine
+from virtualization.models import Cluster, VirtualMachine
 from vpn.models import Tunnel
 
 from .choices import AccessMethodChoices, AccessPathStatusChoices, AuthenticationChoices, OriginChoices
@@ -137,7 +137,8 @@ class AccessPathForm(GenericObjectFormMixin, PrimaryModelForm):
         required=False,
         selector=True,
         hx_target_id='target',
-        help_text=_('A device, virtual machine, application service or IP address'),
+        help_text=_('One device, virtual machine, application service or IP address; or a scope that stands '
+                    'for everything in it: a prefix, VLAN, cluster, site or tenant'),
     )
     method = forms.ChoiceField(label=_('Method'), choices=AccessMethodChoices)
     holders = DynamicModelMultipleChoiceField(label=_('Holders'), queryset=Contact.objects.all(), required=False)
@@ -150,18 +151,20 @@ class AccessPathForm(GenericObjectFormMixin, PrimaryModelForm):
         FieldSet('name', 'tenant', 'route', 'status', 'description', 'tags', name=_('Access path')),
         FieldSet('target', 'target_url', 'method', name=_('Target'), html_id='target'),
         FieldSet('holders', 'holder_groups', 'authentication', 'credential_ref', name=_('Who and how')),
-        FieldSet('approved_by', 'approved_on', 'review_by', 'expires', name=_('Approval and review')),
+        FieldSet('approved_by', 'approved_on', 'reviewed_on', 'review_by', 'expires',
+                 name=_('Approval and review')),
     )
 
     class Meta:
         model = AccessPath
         fields = (
             'name', 'tenant', 'route', 'target_url', 'method', 'holders', 'holder_groups', 'authentication',
-            'credential_ref', 'status', 'approved_by', 'approved_on', 'review_by', 'expires', 'description', 'owner',
-            'comments', 'tags',
+            'credential_ref', 'status', 'approved_by', 'approved_on', 'reviewed_on', 'review_by', 'expires',
+            'description', 'owner', 'comments', 'tags',
         )
         widgets = {
             'approved_on': DatePicker(),
+            'reviewed_on': DatePicker(),
             'review_by': DatePicker(),
             'expires': DatePicker(),
         }
@@ -194,11 +197,13 @@ class AccessPathImportForm(PrimaryModelImportForm):
     route = CSVModelChoiceField(label=_('Route'), queryset=AccessRoute.objects.all(), to_field_name='name')
     target_type = CSVContentTypeField(
         label=_('Target type'), queryset=ContentType.objects.filter(TARGET_MODELS), required=False,
-        help_text=_('dcim.device, virtualization.virtualmachine, ipam.service or ipam.ipaddress'),
+        help_text=_('dcim.device, virtualization.virtualmachine, ipam.service or ipam.ipaddress; or a scope: '
+                    'ipam.prefix, ipam.vlan, virtualization.cluster, dcim.site or tenancy.tenant'),
     )
     target = forms.CharField(
         label=_('Target'), required=False,
-        help_text=_('Name of the device or VM, or the IP address with its mask; or give target_id'),
+        help_text=_('Name of the device, VM, VLAN, cluster, site or tenant, or the IP address or prefix with '
+                    'its mask; or give target_id'),
     )
     method = CSVChoiceField(label=_('Method'), choices=AccessMethodChoices)
     authentication = CSVChoiceField(label=_('Authentication'), choices=AuthenticationChoices, required=False)
@@ -219,8 +224,8 @@ class AccessPathImportForm(PrimaryModelImportForm):
         model = AccessPath
         fields = (
             'name', 'tenant', 'route', 'target_type', 'target_id', 'target_url', 'method', 'holders',
-            'holder_groups', 'authentication', 'credential_ref', 'status', 'approved_by', 'approved_on', 'review_by',
-            'expires', 'description', 'owner', 'comments', 'tags',
+            'holder_groups', 'authentication', 'credential_ref', 'status', 'approved_by', 'approved_on',
+            'reviewed_on', 'review_by', 'expires', 'description', 'owner', 'comments', 'tags',
         )
 
     # Natural key of each target type for the "target" column
@@ -229,6 +234,11 @@ class AccessPathImportForm(PrimaryModelImportForm):
         VirtualMachine: 'name',
         IPAddress: 'address',
         Service: None,  # names repeat across parents: give target_id
+        Prefix: 'prefix',
+        VLAN: 'name',
+        Cluster: 'name',
+        Site: 'name',
+        Tenant: 'name',
     }
 
     # An empty cell means the default, as when the column is left out
@@ -277,6 +287,7 @@ class AccessPathFilterForm(TenancyFilterForm, PrimaryModelFilterSetForm):
     )
     device_id = DynamicModelMultipleChoiceField(
         queryset=Device.objects.all(), required=False, label=_('Into device'),
+        help_text=_('Directly, or through a prefix, VLAN, cluster, site or tenant it sits in'),
     )
     virtual_machine_id = DynamicModelMultipleChoiceField(
         queryset=VirtualMachine.objects.all(), required=False, label=_('Into virtual machine'),

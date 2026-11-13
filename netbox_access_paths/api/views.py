@@ -16,7 +16,9 @@ class AccessRouteViewSet(NetBoxModelViewSet):
 
 
 class AccessPathViewSet(NetBoxModelViewSet):
-    queryset = AccessPath.objects.select_related('tenant', 'route', 'approved_by', 'target_type').prefetch_related(
+    queryset = AccessPath.objects.select_related(
+        'tenant', 'route', 'approved_by', 'reviewed_by', 'target_type',
+    ).prefetch_related(
         'target', 'holders', 'holder_groups', 'tags', *HOP_RELATED, *(f'route__{h}' for h in HOP_RELATED),
     )
     serializer_class = AccessPathSerializer

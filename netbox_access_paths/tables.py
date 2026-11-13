@@ -67,6 +67,8 @@ class AccessPathTable(PrimaryModelTable):
     status = columns.TemplateColumn(verbose_name=_('Status'), template_code=STATUS, order_by=('status',))
     approved_by = tables.Column(verbose_name=_('Approved by'), linkify=True)
     approved_on = columns.DateColumn(verbose_name=_('Approved on'))
+    reviewed_on = columns.DateColumn(verbose_name=_('Last reviewed'))
+    reviewed_by = tables.Column(verbose_name=_('Reviewed by'))
     review_by = columns.DateColumn(verbose_name=_('Review by'))
     expires = columns.DateColumn(verbose_name=_('Expires'))
     tags = columns.TagColumn(url_name='plugins:netbox_access_paths:accesspath_list')
@@ -75,7 +77,8 @@ class AccessPathTable(PrimaryModelTable):
         model = AccessPath
         fields = (
             'pk', 'id', 'name', 'tenant', 'route', 'origin', 'target', 'target_url', 'chain', 'method', 'holders',
-            'authentication', 'credential_ref', 'status', 'approved_by', 'approved_on', 'review_by', 'expires',
+            'authentication', 'credential_ref', 'status', 'approved_by', 'approved_on', 'reviewed_on', 'reviewed_by',
+            'review_by', 'expires',
             'description', 'comments', 'tags', 'created', 'last_updated',
         )
         default_columns = (

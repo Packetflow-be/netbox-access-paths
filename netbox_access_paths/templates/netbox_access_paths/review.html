@@ -48,10 +48,11 @@
               <tr>
                 <th>{% trans "Path" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Target" %}</th>
                 <th>{% trans "Method" %}</th><th>{% trans "Who" %}</th><th>{% trans "Status" %}</th>
+                {% if section.markable %}<th></th>{% endif %}
               </tr>
             </thead>
             <tbody>
-              {% for path in section.paths %}{% include 'netbox_access_paths/inc/path_row.html' with show_tenant=True %}{% endfor %}
+              {% for path in section.paths %}{% include 'netbox_access_paths/inc/path_row.html' with show_tenant=True markable=section.markable %}{% endfor %}
             </tbody>
           </table>
         </div>

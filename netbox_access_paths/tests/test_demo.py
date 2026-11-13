@@ -16,10 +16,10 @@ class DemoCommandTest(TestCase):
     def test_create_and_delete(self):
         call_command('access_paths_demo', stdout=StringIO())
         self.assertEqual(AccessRoute.objects.count(), 4)
-        self.assertEqual(AccessPath.objects.count(), 7)
+        self.assertEqual(AccessPath.objects.count(), 9)
         self.assertTrue(AccessPath.objects.filter(needs_review_q()).exists())
         jump = Device.objects.get(name='msp-jump01')
-        self.assertEqual(AccessPath.objects.filter(route__hops__device=jump).count(), 4)
+        self.assertEqual(AccessPath.objects.filter(route__hops__device=jump).count(), 5)
         with self.assertRaises(CommandError):
             call_command('access_paths_demo', stdout=StringIO())
 

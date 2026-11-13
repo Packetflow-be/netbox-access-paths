@@ -1,7 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_delete
 
-TARGET_SENDERS = ('dcim.Device', 'virtualization.VirtualMachine', 'ipam.Service', 'ipam.IPAddress')
+TARGET_SENDERS = (
+    'dcim.Device', 'virtualization.VirtualMachine', 'ipam.Service', 'ipam.IPAddress',
+    'ipam.Prefix', 'ipam.VLAN', 'virtualization.Cluster', 'dcim.Site', 'tenancy.Tenant',
+)
 
 
 def clear_deleted_target(sender, instance, **kwargs):

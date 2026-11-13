@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0 (2026-11-13)
+
+- **Scope targets**: a path's target can be a prefix, VLAN, cluster, site or tenant, and then stands for
+  everything in it. The device and VM tabs, the `device_id` / `virtual_machine_id` filters and the tab badges
+  count such a path as a path into every device and VM it covers: an IP address inside the prefix (same VRF),
+  the VLAN on an interface or on a containing prefix, the cluster, the site, the tenant. A prefix, VLAN,
+  cluster or site path covers only devices and VMs of the path's tenant or of no tenant, unless
+  `scope_same_tenant` is set to `False`. The questionnaire export writes "everything in ..."; the REST API has
+  a read-only `scope` field; CSV import takes the new target types by name.
+- **Review sign-off**: *Mark reviewed* on the path page, on the review queue's *Review due* rows and as a bulk
+  action on the path list records `reviewed_on` (today) and `reviewed_by` (the user) and sets `review_by`
+  `review_interval_days` (default 365) ahead. Both fields are in the table, the filters, the REST API,
+  GraphQL and the questionnaire export ("Last reviewed").
+- **Dashboard widget** *Access review*: the review queue's counts on the home screen, each linked to its list.
+- The demo data has two scope paths (nine paths in all).
+- Migration `0002`: two new columns on access paths; no data changes.
+
 ## 0.1.0 (2026-11-12)
 
 First version, for NetBox 4.7 (4.7.0 and later; 4.8 allowed).

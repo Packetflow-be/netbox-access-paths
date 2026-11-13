@@ -41,7 +41,7 @@
           <span class="badge text-bg-secondary ms-1">{{ into|length }}</span>
         </h2>
         {% if into %}
-          <div class="card-body small text-secondary">{% trans "Paths whose target is this object, one of its application services or one of its IP addresses." %}</div>
+          <div class="card-body small text-secondary">{% trans "Paths whose target is this object, one of its application services or IP addresses, or a scope it sits in: a prefix, VLAN, cluster, site or the whole tenant." %}</div>
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>

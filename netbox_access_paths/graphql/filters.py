@@ -27,6 +27,7 @@ class AccessPathFilter(TenancyFilterMixin, PrimaryModelFilter):
     credential_ref: StrFilterLookup[str] | None = strawberry_django.filter_field()
     status: StrFilterLookup[str] | None = strawberry_django.filter_field()
     approved_by_id: ID | None = strawberry_django.filter_field()
+    reviewed_by_id: ID | None = strawberry_django.filter_field()
 
 
 @register_filter(models.AccessHop, lookups=True)

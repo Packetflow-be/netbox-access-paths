@@ -7,6 +7,7 @@ from ipam.models import Prefix
 from netbox.filtersets import PrimaryModelFilterSet
 from tenancy.filtersets import TenancyFilterSet
 from tenancy.models import Contact, ContactGroup, Tenant
+from users.models import User
 from utilities.filters import MultiValueContentTypeFilter, MultiValueNumberFilter
 from utilities.filtersets import register_filterset
 from virtualization.models import VirtualMachine
@@ -90,11 +91,11 @@ class AccessPathFilterSet(HopFilterMixin, PrimaryModelFilterSet, TenancyFilterSe
     target_type = MultiValueContentTypeFilter()
     target_id = MultiValueNumberFilter()
     device_id = django_filters.ModelMultipleChoiceFilter(
-        queryset=Device.objects.all(), method='filter_into', label=_('Into device, its services or IPs (ID)'),
+        queryset=Device.objects.all(), method='filter_into', label=_('Into device, its services, IPs or scopes (ID)'),
     )
     virtual_machine_id = django_filters.ModelMultipleChoiceFilter(
         queryset=VirtualMachine.objects.all(), method='filter_into',
-        label=_('Into virtual machine, its services or IPs (ID)'),
+        label=_('Into virtual machine, its services, IPs or scopes (ID)'),
     )
     method = django_filters.MultipleChoiceFilter(choices=AccessMethodChoices, distinct=False)
     authentication = django_filters.MultipleChoiceFilter(choices=AuthenticationChoices, distinct=False)
@@ -107,6 +108,9 @@ class AccessPathFilterSet(HopFilterMixin, PrimaryModelFilterSet, TenancyFilterSe
     )
     approved_by_id = django_filters.ModelMultipleChoiceFilter(
         queryset=Contact.objects.all(), distinct=False, label=_('Approved by (ID)'),
+    )
+    reviewed_by_id = django_filters.ModelMultipleChoiceFilter(
+        queryset=User.objects.all(), distinct=False, label=_('Reviewed by (ID)'),
     )
     expired = _boolean('filter_flag', _('Expired'))
     review_due = _boolean('filter_flag', _('Review due'))
@@ -127,7 +131,8 @@ class AccessPathFilterSet(HopFilterMixin, PrimaryModelFilterSet, TenancyFilterSe
     class Meta:
         model = AccessPath
         fields = (
-            'id', 'name', 'target_url', 'credential_ref', 'approved_on', 'review_by', 'expires', 'description',
+            'id', 'name', 'target_url', 'credential_ref', 'approved_on', 'reviewed_on', 'review_by', 'expires',
+            'description',
         )
 
     def search(self, queryset, name, value):

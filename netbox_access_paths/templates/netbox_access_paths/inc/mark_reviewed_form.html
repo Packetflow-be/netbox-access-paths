@@ -1,0 +1,8 @@
+{% load i18n %}<form method="post" action="{% url 'plugins:netbox_access_paths:accesspath_mark_reviewed' %}" class="d-inline">
+  {% csrf_token %}
+  <input type="hidden" name="pk" value="{{ path.pk }}">
+  <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+  <button type="submit" class="btn {{ button_class|default:'btn-green' }}" title="{% blocktrans with days=review_interval_days %}Record that you reviewed this path today; the next review is due in {{ days }} days{% endblocktrans %}">
+    <i class="mdi mdi-clipboard-check-outline" aria-hidden="true"></i> {% trans "Mark reviewed" %}
+  </button>
+</form>

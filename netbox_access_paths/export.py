@@ -5,11 +5,11 @@ supplier security questionnaires ("how exactly do you access our systems?").
 import csv
 import io
 
-from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from . import __version__
+from .utils import plugin_setting
 
 FORMATS = ('csv', 'markdown')
 
@@ -31,6 +31,7 @@ def _columns(include_credential_ref):
         ('status', _('Status')),
         ('approved_by', _('Approved by')),
         ('approved_on', _('Approved on')),
+        ('reviewed_on', _('Last reviewed')),
         ('review_by', _('Review by')),
         ('expires', _('Expires')),
     ]
@@ -38,7 +39,7 @@ def _columns(include_credential_ref):
 
 
 def include_credential_ref():
-    return bool(settings.PLUGINS_CONFIG.get('netbox_access_paths', {}).get('export_credential_ref', False))
+    return bool(plugin_setting('export_credential_ref'))
 
 
 def _hop_text(hop):
@@ -49,6 +50,8 @@ def build_rows(paths):
     rows = []
     for path in paths:
         target = path.target_display or ''
+        if path.is_scope:
+            target = _('everything in {type} {name}').format(type=path.target_type.name, name=target)
         if path.target_type_id and path.target_url:
             target = f'{target} ({path.target_url})'
         who = [c.name for c in path.holders.all()] + [_('group {name}').format(name=g.name)
@@ -66,6 +69,7 @@ def build_rows(paths):
             'status': path.get_status_display(),
             'approved_by': path.approved_by.name if path.approved_by else '',
             'approved_on': path.approved_on.isoformat() if path.approved_on else '',
+            'reviewed_on': path.reviewed_on.isoformat() if path.reviewed_on else '',
             'review_by': path.review_by.isoformat() if path.review_by else '',
             'expires': path.expires.isoformat() if path.expires else '',
         })
