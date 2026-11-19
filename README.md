@@ -9,6 +9,11 @@
 
 **Document how your team reaches every customer system, in NetBox.**
 
+**Live demo: [netbox-ot.packetflow.be](https://netbox-ot.packetflow.be)**, log in as `demo` / `demo`, then
+*Access paths* in the menu. It runs beside [netbox-ot](https://github.com/Packetflow-be/netbox-ot) on a fictional
+plant: how an MSP, a machine supplier and the plant itself reach it. You can change anything; it is reset every two
+hours, so don't enter real data.
+
 Every MSP has the same tribal knowledge: *to get into customer X, connect to the
 office VPN, RDP to the jump host, then open the firewall portal.* It lives in a
 wiki page, a password manager note, or one engineer's head. That's fine until:
